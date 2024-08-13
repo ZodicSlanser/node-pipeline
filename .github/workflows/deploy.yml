@@ -1,0 +1,45 @@
+name: CI/CD Pipeline
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v2
+
+    - name: Set up Node.js 
+      uses: actions/setup-node@v2
+      with:
+        node-version: '16'
+
+    - name: Install dependencies
+      run: npm install
+
+    - name: Run tests
+      run: npm test
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v2
+
+    - name: Deploy to EC2
+      env:
+        EC2_HOST: your_ec2_public_ip
+        EC2_USER: ec2-user
+        EC2_SSH_KEY: ${{ secrets.EC2_SSH_KEY }}
+      run: |
+        echo "${EC2_SSH_KEY}" > private_key.pem
+        chmod 600 private_key.pem
+        scp -i private_key.pem -o StrictHostKeyChecking=no -r ./* $EC2_USER@$EC2_HOST:/var/www/html/
+        ssh -i private_key.pem -o StrictHostKeyChecking=no $EC2_USER@$EC2_HOST "sudo systemctl restart apache2"
+        rm private_key.pem
