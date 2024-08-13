@@ -31,8 +31,8 @@ jobs:
 
     - name: Deploy to EC2
       env:
-        EC2_HOST: your_ec2_public_ip
-        EC2_USER: ec2-user
+        EC2_HOST: $ec2_ip
+        EC2_USER: $ec2_user
         EC2_SSH_KEY: ${{ secrets.EC2_SSH_KEY }}
       run: |
         echo "${EC2_SSH_KEY}" > private_key.pem
